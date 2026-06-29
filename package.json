@@ -4,10 +4,24 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "dev": "nuxt dev",
+    "dev": "npm run db:wait && nuxt dev --port 3001",
+    "dev:open": "npm run db:wait && nuxt dev --port 3001 --open",
+    "dev:docker": "npm run db:up && npm run db:wait && nuxt dev --port 3001",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+
+    "db:up": "docker compose up -d",
+    "db:wait": "node scripts/wait-for-db.mjs",
+    "db:generate": "prisma generate --schema server/prisma/schema.prisma",
+    "db:push": "prisma db push --schema server/prisma/schema.prisma",
+    "db:seed": "tsx server/prisma/seed.ts",
+    "db:init": "npm run db:wait && npm run db:push && npm run db:seed",
+    "db:init:docker": "npm run db:up && npm run db:wait && npm run db:push && npm run db:seed",
+    "db:studio": "prisma studio --schema server/prisma/schema.prisma",
+
+    "typecheck": "nuxt typecheck",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@nuxt/eslint": "^1.16.0",
@@ -22,7 +36,6 @@
     "eslint": "^10.6.0",
     "nuxt": "^4.4.8",
     "nuxt-auth-utils": "^0.5.29",
-    "pg": "^8.22.0",
     "pinia": "^3.0.4",
     "tailwindcss": "^4.3.1",
     "vue": "^3.5.38",
@@ -32,9 +45,11 @@
   "devDependencies": {
     "@types/pg": "^8.20.0",
     "dotenv": "^17.4.2",
+    "pg": "^8.22.0",
     "prettier": "^3.9.1",
     "prisma": "^7.8.0",
     "tsx": "^4.22.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.5"
   }
 }

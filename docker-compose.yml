@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: muji-shop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: muji_shop
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "123456"
+    ports:
+      - "5432:5432"
+    volumes:
+      - muji_shop_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  muji_shop_postgres_data:

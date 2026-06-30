@@ -360,6 +360,8 @@
 </template>
 
 <script setup lang="ts">
+import { getProductDetail, getProducts } from '~/apis/products';
+
 type ProductSwatch = {
   label: string;
   hex: string;
@@ -1046,14 +1048,69 @@ const products: Product[] = [
 
 const currentId = computed(() => getRouteParamString(route.params.id));
 
+const { data: productResponse, error: productError } = await useAsyncData(
+  "product-detail",
+  () => getProductDetail(currentId.value),
+  {
+    watch: [currentId],
+  },
+);
+
 const product = computed(() => {
+  if (productResponse.value) {
+    return productResponse.value.Data;
+  }
+
+  if (!productError.value) {
+    return null;
+  }
+
   return products.find((item) => {
     return item.slug === currentId.value || String(item.id) === currentId.value;
-  });
+  }) ?? null;
 });
+
+const { data: relatedProductsResponse } = await useAsyncData(
+  "product-related",
+  async () => {
+    if (!product.value) {
+      return {
+        Status: {
+          Code: 0,
+          Message: "",
+        },
+        Data: {
+          data: [],
+          total: 0,
+        },
+      };
+    }
+
+    return getProducts({
+      category: product.value.category,
+      pageSize: 5,
+    });
+  },
+  {
+    watch: [product],
+  },
+);
 
 const relatedProducts = computed(() => {
   if (!product.value) {
+    return [];
+  }
+
+  const apiRelatedProducts =
+    relatedProductsResponse.value?.Data.data
+      .filter((item) => item.id !== product.value?.id)
+      .slice(0, 4) ?? [];
+
+  if (apiRelatedProducts.length) {
+    return apiRelatedProducts;
+  }
+
+  if (!productError.value) {
     return [];
   }
 

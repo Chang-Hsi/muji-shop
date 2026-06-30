@@ -36,23 +36,38 @@ model Category {
 }
 
 model Product {
-  id          Int            @id @default(autoincrement())
-  name        String
-  slug        String         @unique
-  price       Int
-  mainImage   String
-  description String?
-  badge       String?
-  isFeatured  Boolean        @default(false)
-  sortOrder   Int            @default(0)
-  isActive    Boolean        @default(true)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  categoryId  Int
-  category    Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  images      ProductImage[]
+  id               Int                    @id @default(autoincrement())
+  name             String
+  slug             String                 @unique
+  price            Int
+  mainImage        String
+  description      String?
+  fullDescription  String                 @default("")
+  material         String                 @default("")
+  color            String                 @default("")
+  sales            Int                    @default(0)
+  stock            Int                    @default(0)
+  isNew            Boolean                @default(false)
+  isLimited        Boolean                @default(false)
+  careInstructions String                 @default("")
+  badge            String?
+  isFeatured       Boolean                @default(false)
+  sortOrder        Int                    @default(0)
+  isActive         Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  categoryId       Int
+  category         Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images           ProductImage[]
+  swatches         ProductSwatch[]
+  topics           ProductTopic[]
+  specifications   ProductSpecification[]
 
   @@index([categoryId])
+  @@index([material])
+  @@index([color])
+  @@index([price])
+  @@index([isActive])
   @@index([isFeatured, isActive, sortOrder])
 }
 
@@ -68,6 +83,44 @@ model ProductImage {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId, isActive, sortOrder])
+}
+
+model ProductSwatch {
+  id        Int      @id @default(autoincrement())
+  label     String
+  hex       String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model ProductTopic {
+  id        Int      @id @default(autoincrement())
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([value])
+  @@index([productId])
+}
+
+model ProductSpecification {
+  id        Int      @id @default(autoincrement())
+  label     String
+  value     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
 }
 
 model StoreGroup {

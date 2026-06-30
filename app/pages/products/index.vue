@@ -117,6 +117,8 @@ import ProductFilterTags from '~/components/products/ProductFilterTags.vue';
 import ProductGrid from '~/components/products/ProductGrid.vue';
 import ProductList from '~/components/products/ProductList.vue';
 import ProductToolbar from '~/components/products/ProductToolbar.vue';
+import { getProducts } from '~/apis/products';
+import type { GetProductsParams } from '~/types/products';
 
 type Product = {
   id: number;
@@ -136,6 +138,7 @@ type Product = {
 };
 
 type SortValue = "new" | "popular" | "priceLow" | "priceHigh";
+type PriceRangeValue = NonNullable<GetProductsParams["price"]>;
 
 type FilterTag = {
   type: "category" | "material" | "color" | "price" | "topic" | "keyword";
@@ -482,13 +485,51 @@ const keyword = ref("");
 const selectedCategories = ref<string[]>([]);
 const selectedMaterials = ref<string[]>([]);
 const selectedColors = ref<string[]>([]);
-const selectedPrice = ref("all");
+const selectedPrice = ref<PriceRangeValue>("all");
 const selectedSort = ref<SortValue>("new");
 const viewMode = ref<"grid" | "list">("grid");
 
 const routeCategory = computed(() => getQueryString(route.query.category));
 const routeTopic = computed(() => getQueryString(route.query.topic));
 const routeSort = computed(() => getQueryString(route.query.sort));
+
+const productQueryParams = computed<GetProductsParams>(() => ({
+  category: selectedCategories.value.length ? selectedCategories.value : undefined,
+  material: selectedMaterials.value.length ? selectedMaterials.value : undefined,
+  color: selectedColors.value.length ? selectedColors.value : undefined,
+  topic: routeTopic.value || undefined,
+  keyword: keyword.value || undefined,
+  price: selectedPrice.value,
+  sort: selectedSort.value,
+  pageSize: 100,
+}));
+
+const { data: productsResponse, error: productsError } = await useAsyncData(
+  "products",
+  () => getProducts(productQueryParams.value),
+  {
+    watch: [productQueryParams],
+  },
+);
+
+const { data: allProductsResponse } = await useAsyncData(
+  "products:all",
+  () => getProducts({
+    pageSize: 100,
+  }),
+);
+
+const apiProducts = computed<Product[]>(() => {
+  if (productsResponse.value) {
+    return productsResponse.value.Data.data;
+  }
+
+  return productsError.value ? products : [];
+});
+
+const allProducts = computed<Product[]>(() => {
+  return allProductsResponse.value?.Data.data ?? apiProducts.value;
+});
 
 const currentContextLabel = computed(() => {
   const firstCategory = selectedCategories.value[0];
@@ -567,7 +608,7 @@ const activeFilterTags = computed<FilterTag[]>(() => {
 });
 
 const filteredProducts = computed(() => {
-  let result = [...products];
+  let result = [...apiProducts.value];
 
   if (selectedCategories.value.length) {
     result = result.filter((product) => selectedCategories.value.includes(product.category));
@@ -633,7 +674,7 @@ const filteredProducts = computed(() => {
 });
 
 watch(
-  () => [route.query.category, route.query.sort, route.query.topic],
+  () => [route.query.category, route.query.sort, route.query.topic, route.query.keyword],
   () => {
     const category = getQueryString(route.query.category);
     const sort = normalizeSortValue(route.query.sort);
@@ -690,7 +731,7 @@ function getSortLabel(value: string) {
 }
 
 function getCategoryCount(value: string) {
-  return products.filter((product) => product.category === value).length;
+  return allProducts.value.filter((product) => product.category === value).length;
 }
 
 function formatPrice(price: number) {

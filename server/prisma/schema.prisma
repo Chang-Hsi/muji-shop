@@ -137,16 +137,59 @@ model StoreGroup {
 }
 
 model Store {
-  id           Int        @id @default(autoincrement())
+  id           Int                   @id @default(autoincrement())
   title        String
-  slug         String     @unique
+  name         String                @default("")
+  slug         String                @unique
+  region       String                @default("")
+  regionLabel  String                @default("")
+  address      String                @default("")
+  phone        String                @default("")
+  hours        String                @default("")
   image        String
-  sortOrder    Int        @default(0)
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  facadeImage  String?
+  layoutImages Json                  @default("[]")
+  lat          Float                 @default(0)
+  lng          Float                 @default(0)
+  sortOrder    Int                   @default(0)
+  isActive     Boolean               @default(true)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
   storeGroupId Int
-  storeGroup   StoreGroup @relation(fields: [storeGroupId], references: [id], onDelete: Cascade)
+  storeGroup   StoreGroup            @relation(fields: [storeGroupId], references: [id], onDelete: Cascade)
+  services     StoreServiceOnStore[]
 
   @@index([storeGroupId, isActive, sortOrder])
+  @@index([region])
+}
+
+model StoreService {
+  id          Int                   @id @default(autoincrement())
+  title       String
+  slug        String                @unique
+  category    String
+  badge       String?
+  description String
+  detail      String
+  image       String
+  buttonText  String
+  features    Json                  @default("[]")
+  sortOrder   Int                   @default(0)
+  isActive    Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  stores      StoreServiceOnStore[]
+
+  @@index([isActive, sortOrder])
+}
+
+model StoreServiceOnStore {
+  storeId        Int
+  storeServiceId Int
+  sortOrder      Int          @default(0)
+  store          Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  storeService   StoreService @relation(fields: [storeServiceId], references: [id], onDelete: Cascade)
+
+  @@id([storeId, storeServiceId])
+  @@index([storeServiceId])
 }

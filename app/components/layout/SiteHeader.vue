@@ -100,14 +100,9 @@ const navItems: NavItem[] = [
             to: "/stores",
           },
           {
-            title: "營業時間",
+            title: "門市服務",
             description: "各門市營業時間與公告",
-            to: "/stores/hours",
-          },
-          {
-            title: "期間限定店",
-            description: "快閃店與限定展售資訊",
-            to: "/stores/popup",
+            to: "/stores/services",
           },
         ],
       },
@@ -116,15 +111,15 @@ const navItems: NavItem[] = [
         links: [
           {
             title: "門市取貨",
-            to: "/stores/pickup",
+            to: "/stores/services?keyword=門市取貨",
           },
           {
             title: "商品預約",
-            to: "/stores/reservation",
+            to: "/stores/services?keyword=商品預約",
           },
           {
             title: "庫存查詢",
-            to: "/stores/stock",
+            to: "/stores/services?keyword=庫存查詢",
           },
         ],
       },

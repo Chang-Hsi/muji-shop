@@ -1,6 +1,10 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
+import {
+  storeLocations as serviceStoreLocations,
+  storeServices as serviceStoreServices,
+} from "../../app/data/storeServices";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -644,6 +648,8 @@ const storeGroups = [
 ];
 
 async function main() {
+  await prisma.storeServiceOnStore.deleteMany();
+  await prisma.storeService.deleteMany();
   await prisma.productSpecification.deleteMany();
   await prisma.productTopic.deleteMany();
   await prisma.productSwatch.deleteMany();
@@ -810,6 +816,86 @@ async function main() {
       },
     });
   }
+
+  const serviceDirectoryGroup = await prisma.storeGroup.create({
+    data: {
+      key: "service-directory",
+      label: "門市服務",
+      sortOrder: storeGroups.length,
+      isActive: false,
+    },
+  });
+
+  const serviceStoreIdMap = new Map<number, number>();
+
+  for (const [storeIndex, store] of serviceStoreLocations.entries()) {
+    const createdStore = await prisma.store.create({
+      data: {
+        title: store.name,
+        name: store.name,
+        slug: store.slug,
+        region: store.region,
+        regionLabel: store.regionLabel,
+        address: store.address,
+        phone: store.phone,
+        hours: store.hours,
+        image: store.image,
+        facadeImage: store.facadeImage,
+        layoutImages: store.layoutImages ?? [],
+        lat: store.lat,
+        lng: store.lng,
+        sortOrder: storeIndex,
+        storeGroupId: serviceDirectoryGroup.id,
+      },
+    });
+
+    serviceStoreIdMap.set(store.id, createdStore.id);
+  }
+
+  const storeServiceIdMap = new Map<string, number>();
+
+  for (const [serviceIndex, service] of serviceStoreServices.entries()) {
+    const createdService = await prisma.storeService.create({
+      data: {
+        title: service.title,
+        slug: service.slug,
+        category: service.category,
+        badge: service.badge,
+        description: service.description,
+        detail: service.detail,
+        image: service.image,
+        buttonText: service.buttonText,
+        features: service.features,
+        sortOrder: serviceIndex,
+      },
+    });
+
+    storeServiceIdMap.set(service.slug, createdService.id);
+  }
+
+  await prisma.storeServiceOnStore.createMany({
+    data: serviceStoreServices.flatMap((service, serviceIndex) => {
+      const storeServiceId = storeServiceIdMap.get(service.slug);
+
+      if (!storeServiceId) {
+        return [];
+      }
+
+      return service.availableStoreIds.flatMap((storeId) => {
+        const createdStoreId = serviceStoreIdMap.get(storeId);
+
+        return createdStoreId
+          ? [
+              {
+                storeId: createdStoreId,
+                storeServiceId,
+                sortOrder: serviceIndex,
+              },
+            ]
+          : [];
+      });
+    }),
+  });
 }
 
 main()

@@ -27,9 +27,9 @@ const navItems: NavItem[] = [
         title: "商品分類",
         links: [
           {
-            title: "全部商品",
-            description: "瀏覽所有簡潔生活選品",
-            to: "/products",
+            title: "文創用品",
+            description: "瀏覽新潮的創意產品",
+            to: "/products?category=creative",
           },
           {
             title: "生活用品",

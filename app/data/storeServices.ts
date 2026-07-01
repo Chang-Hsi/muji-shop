@@ -41,6 +41,9 @@ export type StoreLocationItem = {
 
 export type StoreServiceItem = {
   id: number;
+  storeId?: number;
+  storeSlug?: string;
+  storeName?: string;
   title: string;
   slug: StoreServiceCode;
   category: string;

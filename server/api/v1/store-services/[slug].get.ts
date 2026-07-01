@@ -26,6 +26,9 @@ const storeSchema = z.object({
 
 const serviceSchema = z.object({
   id: z.number(),
+  storeId: z.number().optional(),
+  storeSlug: z.string().optional(),
+  storeName: z.string().optional(),
   title: z.string(),
   slug: z.string(),
   category: z.string(),
@@ -78,11 +81,13 @@ const serviceInclude = {
 };
 
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, "slug") ?? "";
-  console.log(`[api] GET /api/v1/store-services/${slug} triggered`);
+  const storeIdentifier = getRouterParam(event, "slug") ?? "";
+  console.log(
+    `[api] GET /api/v1/store-services/${storeIdentifier} triggered`,
+  );
 
   try {
-    const numericId = Number.parseInt(slug, 10);
+    const numericId = Number.parseInt(storeIdentifier, 10);
     const idFilter = Number.isFinite(numericId) ? [{ id: numericId }] : [];
     const legacySortOrderFilter =
       Number.isFinite(numericId) && numericId > 0
@@ -97,7 +102,13 @@ export default defineEventHandler(async (event) => {
         },
         OR: [
           {
-            slug,
+            slug: storeIdentifier,
+          },
+          {
+            name: storeIdentifier,
+          },
+          {
+            title: storeIdentifier,
           },
           ...idFilter,
           ...legacySortOrderFilter,
@@ -133,7 +144,7 @@ export default defineEventHandler(async (event) => {
             isActive: true,
             OR: [
               {
-                slug,
+                slug: storeIdentifier,
               },
               ...idFilter,
               ...legacySortOrderFilter,
@@ -179,11 +190,13 @@ export default defineEventHandler(async (event) => {
         Message: "",
       },
       Data: {
-        service: serializeStoreService(service),
+        service: serializeStoreService(service, displayStore),
         displayStore: displayStore ? serializeStore(displayStore) : null,
         layoutImages: displayStore ? getStringArray(displayStore.layoutImages) : [],
         facadeImage: displayStore?.facadeImage || undefined,
-        services: relatedServices.map(serializeStoreService),
+        services: relatedServices.map((relatedService) =>
+          serializeStoreService(relatedService),
+        ),
       },
     });
   } catch (error: unknown) {

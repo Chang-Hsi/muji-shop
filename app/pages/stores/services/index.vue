@@ -180,6 +180,6 @@ function getQueryString(value: unknown) {
 }
 
 function getServiceDetailPath(service: StoreServiceItem) {
-  return `/stores/services/${service.slug}`;
+  return `/stores/services/${service.storeId ?? service.id}`;
 }
 </script>

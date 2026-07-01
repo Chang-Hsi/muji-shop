@@ -22,9 +22,9 @@ export function getStoreServices(params: GetStoreServicesParams = {}) {
   });
 }
 
-export function getStoreServiceDetail(slug: string | number) {
+export function getStoreServiceDetail(storeId: string | number) {
   return request<ApiResponse<StoreServiceDetailData>>(
-    `/api/v1/store-services/${encodeURIComponent(String(slug))}`,
+    `/api/v1/store-services/${encodeURIComponent(String(storeId))}`,
     {
       method: "GET",
       auth: false,

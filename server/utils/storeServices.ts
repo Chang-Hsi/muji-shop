@@ -37,11 +37,17 @@ export function serializeStore(store: StoreWithServices) {
   };
 }
 
-export function serializeStoreService(service: StoreServiceWithStores) {
+export function serializeStoreService(
+  service: StoreServiceWithStores,
+  targetStore?: StoreWithServices | null,
+) {
   const stores = service.stores.map((item) => item.store);
 
   return {
     id: service.id,
+    storeId: targetStore?.id,
+    storeSlug: targetStore?.slug,
+    storeName: targetStore ? targetStore.name || targetStore.title : undefined,
     title: service.title,
     slug: service.slug,
     category: service.category,

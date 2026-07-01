@@ -22,7 +22,7 @@
           <span>/</span>
 
           <span class="font-medium text-stone-900">
-            {{ service.title }}
+            {{ displayStore?.name ?? service.storeName ?? service.title }}
           </span>
         </template>
       </nav>
@@ -35,7 +35,7 @@
           <div class="overflow-hidden bg-stone-100">
             <img
               :src="service.image"
-              :alt="service.title"
+              :alt="displayStore?.name ?? service.storeName ?? service.title"
               class="aspect-4/3 w-full object-cover"
             >
           </div>
@@ -47,7 +47,7 @@
 
             <div class="mt-3 flex flex-wrap items-center gap-3">
               <h1 class="text-3xl font-semibold tracking-tight text-stone-950">
-                {{ service.title }}
+                {{ displayStore?.name ?? service.storeName ?? service.title }}
               </h1>
 
               <span
@@ -118,7 +118,7 @@
             >
               <img
                 :src="image"
-                :alt="`${service.title} 空間示意`"
+                :alt="`${displayStore?.name ?? service.storeName ?? service.title} 空間示意`"
                 class="w-full object-cover transition duration-500 hover:scale-105"
               >
             </div>
@@ -239,7 +239,7 @@
             <p class="text-lg font-medium text-stone-950">找不到對應門市資訊</p>
 
             <p class="mt-2 text-sm text-stone-500">
-              請確認 data/storeServices.ts 裡的服務 id 是否與門市 id 對應。
+              請確認網址中的門市 id 或門市代碼是否正確。
             </p>
           </div>
         </section>
@@ -249,10 +249,10 @@
         v-else
         class="mt-10 rounded-3xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center"
       >
-        <p class="text-lg font-medium text-stone-950">找不到這個門市服務</p>
+        <p class="text-lg font-medium text-stone-950">找不到這個門市</p>
 
         <p class="mt-2 text-sm text-stone-500">
-          服務可能已下架，或網址不正確。
+          門市可能已下架，或網址不正確。
         </p>
 
         <NuxtLink
@@ -283,7 +283,7 @@ type DetailStoreItem = StoreLocationItem | StoreServiceStoreItem;
 
 const route = useRoute();
 
-const currentSlug = computed(() => {
+const currentStoreIdentifier = computed(() => {
   const slug = route.params.slug;
 
   if (Array.isArray(slug)) {
@@ -295,9 +295,9 @@ const currentSlug = computed(() => {
 
 const { data: detailResponse, error: detailError } = await useAsyncData(
   "store-service-detail",
-  () => getStoreServiceDetail(currentSlug.value),
+  () => getStoreServiceDetail(currentStoreIdentifier.value),
   {
-    watch: [currentSlug],
+    watch: [currentStoreIdentifier],
   },
 );
 
@@ -307,8 +307,9 @@ const currentStore = computed<StoreLocationItem | null>(() => {
   return (
     storeLocations.find((store) => {
       return (
-        store.slug === currentSlug.value ||
-        String(store.id) === currentSlug.value
+        store.name === currentStoreIdentifier.value ||
+        store.slug === currentStoreIdentifier.value ||
+        String(store.id) === currentStoreIdentifier.value
       );
     }) ?? null
   );
@@ -333,7 +334,10 @@ const service = computed<StoreServiceItem | null>(() => {
   return (
     fallbackStoreServices.find((item) => {
       return (
-        item.slug === currentSlug.value || String(item.id) === currentSlug.value
+        item.storeSlug === currentStoreIdentifier.value ||
+        item.storeName === currentStoreIdentifier.value ||
+        item.slug === currentStoreIdentifier.value ||
+        String(item.storeId ?? item.id) === currentStoreIdentifier.value
       );
     }) ?? null
   );
@@ -372,7 +376,7 @@ watch(
   (nextService) => {
     useSeoMeta({
       title: nextService ? nextService.title : "找不到門市服務",
-      description: nextService?.description ?? "服務可能已下架，或網址不正確。",
+      description: nextService?.description ?? "門市可能已下架，或網址不正確。",
     });
   },
   {

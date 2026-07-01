@@ -7,6 +7,9 @@ import {
 
 const storeServiceSchema = z.object({
   id: z.number(),
+  storeId: z.number().optional(),
+  storeSlug: z.string().optional(),
+  storeName: z.string().optional(),
   title: z.string(),
   slug: z.string(),
   category: z.string(),
@@ -76,7 +79,35 @@ export default defineEventHandler(async (event) => {
       },
     });
 
-    const serializedServices = services.map(serializeStoreService);
+    const stores = await prisma.store.findMany({
+      where: {
+        isActive: true,
+        services: {
+          some: {},
+        },
+      },
+      orderBy: {
+        sortOrder: "asc",
+      },
+      include: {
+        services: {
+          orderBy: {
+            sortOrder: "asc",
+          },
+          include: {
+            storeService: true,
+          },
+        },
+      },
+    });
+
+    const storesBySortOrder = new Map(
+      stores.map((store) => [store.sortOrder, store]),
+    );
+
+    const serializedServices = services.map((service) =>
+      serializeStoreService(service, storesBySortOrder.get(service.sortOrder)),
+    );
     const filteredServices = keyword
       ? serializedServices.filter((service) => {
           const searchableText = [

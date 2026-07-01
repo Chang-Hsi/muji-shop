@@ -136,7 +136,7 @@ const navItems: NavItem[] = [
           {
             title: "全部公告",
             description: "品牌、活動與服務公告",
-            to: "/news",
+            to: "/announcement",
           },
           {
             title: "新品資訊",

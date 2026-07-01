@@ -6,6 +6,7 @@ import {
   storeServices as serviceStoreServices,
 } from "../../app/data/storeServices";
 import { activityService } from "../../app/data/activityService";
+import { announcementService } from "../../app/data/announcementService";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -651,6 +652,7 @@ const storeGroups = [
 async function main() {
   await prisma.storeServiceOnStore.deleteMany();
   await prisma.storeService.deleteMany();
+  await prisma.announcementArticle.deleteMany();
   await prisma.activityArticle.deleteMany();
   await prisma.activityCategory.deleteMany();
   await prisma.productSpecification.deleteMany();
@@ -708,6 +710,31 @@ async function main() {
       heroImage: activity.heroImage,
       thumbnail: activity.thumbnail,
       content: activity.content,
+      sortOrder: index,
+    })),
+  });
+
+  const announcementList = await announcementService.getAnnouncementList();
+  const announcementDetails = await Promise.all(
+    announcementList.items.map(async (item) => {
+      const detail = await announcementService.getAnnouncementDetail(item.id);
+
+      if (!detail.announcement) {
+        throw new Error(`Announcement detail not found: ${item.id}`);
+      }
+
+      return detail.announcement;
+    }),
+  );
+
+  await prisma.announcementArticle.createMany({
+    data: announcementDetails.map((announcement, index) => ({
+      legacyId: announcement.id,
+      slug: announcement.slug,
+      title: announcement.title,
+      date: announcement.date,
+      isLatest: announcement.isLatest ?? false,
+      contentHtml: announcement.contentHtml,
       sortOrder: index,
     })),
   });

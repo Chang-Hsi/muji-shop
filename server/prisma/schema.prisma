@@ -57,6 +57,23 @@ model ActivityArticle {
   @@index([categoryValue])
 }
 
+model AnnouncementArticle {
+  id          Int      @id @default(autoincrement())
+  legacyId    Int      @unique
+  slug        String   @unique
+  title       String
+  date        String
+  isLatest    Boolean  @default(false)
+  contentHtml String   @default("")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([date])
+}
+
 model Category {
   id          Int       @id @default(autoincrement())
   title       String

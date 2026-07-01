@@ -5,6 +5,7 @@ import {
   storeLocations as serviceStoreLocations,
   storeServices as serviceStoreServices,
 } from "../../app/data/storeServices";
+import { activityService } from "../../app/data/activityService";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -650,6 +651,8 @@ const storeGroups = [
 async function main() {
   await prisma.storeServiceOnStore.deleteMany();
   await prisma.storeService.deleteMany();
+  await prisma.activityArticle.deleteMany();
+  await prisma.activityCategory.deleteMany();
   await prisma.productSpecification.deleteMany();
   await prisma.productTopic.deleteMany();
   await prisma.productSwatch.deleteMany();
@@ -663,6 +666,48 @@ async function main() {
   await prisma.homeNews.createMany({
     data: newsItems.map((item, index) => ({
       ...item,
+      sortOrder: index,
+    })),
+  });
+
+  const activityList = await activityService.getActivityList();
+  const activityDetails = await Promise.all(
+    activityList.allArticles.map(async (article) => {
+      const detail = await activityService.getActivityDetail(article.slug);
+
+      if (!detail.activity) {
+        throw new Error(`Activity detail not found: ${article.slug}`);
+      }
+
+      return detail.activity;
+    }),
+  );
+
+  await prisma.activityCategory.createMany({
+    data: activityList.categories.map((category, index) => ({
+      label: category.label,
+      value: category.value,
+      sortOrder: index,
+    })),
+  });
+
+  await prisma.activityArticle.createMany({
+    data: activityDetails.map((activity, index) => ({
+      legacyId: activity.id,
+      slug: activity.slug,
+      title: activity.title,
+      description: activity.description,
+      category: activity.category,
+      categoryValue: activity.categoryValue,
+      date: activity.date,
+      readTime: activity.readTime,
+      image: activity.image,
+      to: activity.to,
+      location: activity.location,
+      relatedIds: activity.relatedIds,
+      heroImage: activity.heroImage,
+      thumbnail: activity.thumbnail,
+      content: activity.content,
       sortOrder: index,
     })),
   });

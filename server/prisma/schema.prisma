@@ -19,6 +19,44 @@ model HomeNews {
   @@index([isActive, sortOrder])
 }
 
+model ActivityCategory {
+  id        Int      @id @default(autoincrement())
+  label     String
+  value     String   @unique
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model ActivityArticle {
+  id            Int      @id @default(autoincrement())
+  legacyId      Int      @unique
+  slug          String   @unique
+  title         String
+  description   String
+  category      String
+  categoryValue String
+  date          String
+  readTime      String
+  image         String
+  to            String
+  location      String
+  relatedIds    Json     @default("[]")
+  heroImage     String
+  thumbnail     String
+  content       Json     @default("[]")
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([categoryValue])
+}
+
 model Category {
   id          Int       @id @default(autoincrement())
   title       String

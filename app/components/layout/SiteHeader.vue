@@ -146,7 +146,7 @@ const navItems: NavItem[] = [
           {
             title: "活動消息",
             description: "優惠活動與會員專屬資訊",
-            to: "/news/events",
+            to: "/activity",
           },
         ],
       },
